@@ -1,4 +1,4 @@
-# Android-u-blox-BLE
+# Android-MDF-BLE
 The u-blox Bluetooth low energy Android app allows developers to evaluate the stand-alone Bluetooth low energy modules from u-blox.
 
 https://www.madebyfire.com/
