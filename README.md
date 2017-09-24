@@ -30,3 +30,4 @@ In the application tag you must have:
 
 For a simple and striped down Activity see BasicBLEActivity.java, here we have the simplest way of connecting to the service to be able to connect, read, write and to get notifications from a BLE device like NINA-B1. This Activity is well documented to set you started in no time.
 
+![image](https://imgur.com/ILve7cI.png)
