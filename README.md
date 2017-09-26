@@ -1,9 +1,8 @@
-# Android-u-blox-BLE
+# Android-MDF-BLE
 The u-blox Bluetooth low energy Android app allows developers to evaluate the stand-alone Bluetooth low energy modules from u-blox.
 
-https://www.u-blox.com/
+https://www.madebyfire.com/
 
-[Download APK](https://github.com/u-blox/Android-u-blox-BLE/releases/latest)
 
 # 
 
@@ -31,13 +30,4 @@ In the application tag you must have:
 
 For a simple and striped down Activity see BasicBLEActivity.java, here we have the simplest way of connecting to the service to be able to connect, read, write and to get notifications from a BLE device like NINA-B1. This Activity is well documented to set you started in no time.
 
-## Disclaimer
-Copyright (C) u-blox
-
-u-blox reserves all rights in this deliverable (documentation, software, etc., hereafter “Deliverable”).
-
-u-blox grants you the right to use, copy, modify and distribute the Deliverable provided hereunder for any purpose without fee.
-
-THIS DELIVERABLE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED WARRANTY. IN PARTICULAR, NEITHER THE AUTHOR NOR U-BLOX MAKES ANY REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY OF THIS DELIVERABLE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
-
-In case you provide us a feedback or make a contribution in the form of a further development of the Deliverable (“Contribution”), u-blox will have the same rights as granted to you, namely to use, copy, modify and distribute the Contribution provided to us for any purpose without fee.
+![image](https://imgur.com/ILve7cI.png)
