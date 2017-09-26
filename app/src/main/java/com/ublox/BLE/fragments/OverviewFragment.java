@@ -6,8 +6,10 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -25,6 +27,11 @@ public class OverviewFragment extends Fragment {
         void setListSession();
         void setPauseSession();
         void setDetailsSession();
+
+        void sendSession(int foo);
+
+
+        void sendMetric(int foo);
     }
 
     public static OverviewFragment newInstance() {
@@ -40,6 +47,8 @@ public class OverviewFragment extends Fragment {
 
     private IOverviewFragmentInteraction mInteractionListener;
 Button startSession, stopSession, listSession, pauseSession, detailsSession;
+    Spinner spinnerSession, spinnerMetric;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,6 +78,10 @@ Button startSession, stopSession, listSession, pauseSession, detailsSession;
 
         pauseSession=(Button)view.findViewById(R.id.btnPauseSession);
         mError=(TextView) view.findViewById(R.id.tvError);
+
+        spinnerSession=(Spinner) view.findViewById(R.id.spinner1);
+        spinnerMetric=(Spinner) view.findViewById(R.id.spinner2);
+
 
         sGreen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -139,6 +152,40 @@ Button startSession, stopSession, listSession, pauseSession, detailsSession;
 
             }
         });
+
+        spinnerSession .setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String c=adapterView.getItemAtPosition(i).toString();
+
+                int foo = Integer.parseInt(c);
+                mInteractionListener.sendSession(foo);
+
+
+            }
+
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        spinnerMetric .setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String c=adapterView.getItemAtPosition(i).toString();
+
+                int foo = Integer.parseInt(c);
+                mInteractionListener.sendMetric(foo);
+
+
+            }
+
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+
+
+
     }
 
     @Override

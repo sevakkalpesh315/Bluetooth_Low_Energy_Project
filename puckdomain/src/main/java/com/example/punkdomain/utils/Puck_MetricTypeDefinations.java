@@ -9,7 +9,7 @@ package com.example.punkdomain.utils;
  */
 public class Puck_MetricTypeDefinations {
 
-    public static final String CURRENT_SPEED="0";
+    public static final int CURRENT_SPEED= 0;
     public static final String LEFT_CADENCE="1";
     public static final String RIGHT_CADENCE="2";
     public static final int AVERAGE_SPEED=3;

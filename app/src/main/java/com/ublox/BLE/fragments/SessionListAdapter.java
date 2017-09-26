@@ -13,7 +13,7 @@ import java.nio.BufferUnderflowException;
 import java.util.Arrays;
 
 /**
- * Created by Poojan on 22/09/2017.
+ * Created by Kalpesh on 22/09/2017.
  */
 
 public class SessionListAdapter extends RecyclerView.Adapter<SessionListAdapter.MyViewHolder> {

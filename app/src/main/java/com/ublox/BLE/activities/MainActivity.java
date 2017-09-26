@@ -37,17 +37,18 @@ import com.example.punkdomain.utils.BLEQueue;
 import com.example.punkdomain.utils.GattAttributes;
 import com.example.punkdomain.utils.Puck_CommandCharacteristics;
 import com.example.punkdomain.utils.Puck_ErrorCodes;
-import com.example.punkdomain.utils.Puck_MetricTypeDefinations;
 import com.ublox.BLE.R;
 import com.ublox.BLE.fragments.OverviewFragment;
 import com.ublox.BLE.fragments.ServicesFragment;
 import com.ublox.BLE.fragments.SessionListAdapter;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import static com.example.punkdomain.utils.GattAttributes.DATA_CHARACTERISTIC;
 import static com.ublox.BLE.R.id.tvAccelerometerRange;
 
 
@@ -55,11 +56,10 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
     private RecyclerView mRecyclerView;
 
 
-
     private static final String TAG = MainActivity.class.getSimpleName();
 
     public static final String EXTRAS_DEVICES = "device";
-
+    StringBuffer stringBuffer;
     private List<BluetoothDevice> mDevices = new ArrayList<>();
     private int currentDevice = 0;
 
@@ -82,6 +82,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
 
 
     private BluetoothGattCharacteristic characteristicFifo;
+    byte sessionType;
+    byte metricType;
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -125,12 +127,12 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                 for (BluetoothGattService service : mBluetoothLeService.getSupportedGattServices()) {
                     for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
                         String uuid = characteristic.getUuid().toString();
-                      //  Toast.makeText(MainActivity.this,"UUID:   "+uuid , Toast.LENGTH_LONG).show();
+                      //  Toast.makeText(MainActivity.this,"UUID:   "+uuid , Toast.LENGTH_SHORT).show();
 
                         if (uuid.equals(GattAttributes.UUID_CHARACTERISTIC_ACC_RANGE)) {
                             try {
                                 mBluetoothLeService.readCharacteristic(characteristic);
-                            //    Toast.makeText(MainActivity.this,"UUID_CHARACTERISTIC_ACC_RANGE " , Toast.LENGTH_LONG).show();
+                            //    Toast.makeText(MainActivity.this,"UUID_CHARACTERISTIC_ACC_RANGE " , Toast.LENGTH_SHORT).show();
                             } catch (Exception ignore) {
                             }
                         }
@@ -140,7 +142,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                                     //characteristicError = characteristic;
                                     mBluetoothLeService.readCharacteristic(characteristic);
                                     mBluetoothLeService.setCharacteristicNotification(characteristic, true);
-                                //    Toast.makeText(MainActivity.this,"UUID_ERROR_CHARACTERISTIC " , Toast.LENGTH_LONG).show();
+                                //    Toast.makeText(MainActivity.this,"UUID_ERROR_CHARACTERISTIC " , Toast.LENGTH_SHORT).show();
 
                                 } catch (Exception ignore) {}
                         }
@@ -148,7 +150,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                             try {
                                 characteristicCommand = characteristic;
                                 mBluetoothLeService.readCharacteristic(characteristic);
-                            //    Toast.makeText(MainActivity.this,"COMMAND_CHARACTERISTIC " , Toast.LENGTH_LONG).show();
+                            //    Toast.makeText(MainActivity.this,"COMMAND_CHARACTERISTIC " , Toast.LENGTH_SHORT).show();
 
                             } catch (Exception ignore) {
                             }
@@ -185,7 +187,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                             try {
                                 mBluetoothLeService.readCharacteristic(characteristic);
                                 mBluetoothLeService.setCharacteristicNotification(characteristic, true);
-                                Toast.makeText(MainActivity.this,"SESSION_LIST_CHARACTERISTIC " , Toast.LENGTH_LONG).show();
+                               // Toast.makeText(MainActivity.this,"SESSION_LIST_CHARACTERISTIC " , Toast.LENGTH_SHORT).show();
 
                             } catch (Exception ignore) {}
                         }
@@ -195,7 +197,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                                 characteristicSessionID= characteristic;
                                 mBluetoothLeService.readCharacteristic(characteristicSessionID);
                                 mBluetoothLeService.setCharacteristicNotification(characteristicSessionID, true);
-                                 Toast.makeText(MainActivity.this,"SESSION_ID_CHARACTERISTIC " , Toast.LENGTH_LONG).show();
+                                 Toast.makeText(MainActivity.this,"SESSION_ID_CHARACTERISTIC " , Toast.LENGTH_SHORT).show();
 
                             } catch (Exception ignore) {}
 
@@ -206,17 +208,16 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                                 characteristicDataID= characteristic;
                                 mBluetoothLeService.readCharacteristic(characteristicDataID);
                                 mBluetoothLeService.setCharacteristicNotification(characteristicDataID, true);
-                            //    Toast.makeText(MainActivity.this,"DATA_ID_CHARACTERISTIC " , Toast.LENGTH_LONG).show();
+                                Toast.makeText(MainActivity.this,"DATA_ID_CHARACTERISTIC " , Toast.LENGTH_SHORT).show();
 
 
                             } catch (Exception ignore) {
                             }
-                        }else if (uuid.equals(GattAttributes.DATA_CHARACTERISTIC)) {
+                        }else if (uuid.equals(DATA_CHARACTERISTIC)) {
                             try {
-                                //characteristicError = characteristic;
                                 mBluetoothLeService.readCharacteristic(characteristic);
                                 mBluetoothLeService.setCharacteristicNotification(characteristic, true);
-                             //   Toast.makeText(MainActivity.this, "DATA_CHARACTERISTIC ", Toast.LENGTH_LONG).show();
+                                 Toast.makeText(MainActivity.this, "DATA_CHARACTERISTIC ", Toast.LENGTH_SHORT).show();
 
                             } catch (Exception ignore) {
                             }
@@ -225,7 +226,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                             try {
                                 mBluetoothLeService.readCharacteristic(characteristic);
                                 mBluetoothLeService.setCharacteristicNotification(characteristic, true);
-                              //  Toast.makeText(MainActivity.this,"MEMORY_CHARACTERISTIC " , Toast.LENGTH_LONG).show();
+                              //  Toast.makeText(MainActivity.this,"MEMORY_CHARACTERISTIC " , Toast.LENGTH_SHORT).show();
                                 Log.i("MDFIRE","MEMORY_CHARACTERISTIC");
 
                             } catch (Exception ignore) {}
@@ -304,7 +305,22 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
         }
     }
 
+    public static String bytesToString(byte[] b) {
+        try {
+            return new String(b, "UTF-8");
+        }
 
+        catch (UnsupportedEncodingException ex) {
+        }
+
+        return null;
+    }
+
+    private int toInt(byte[] b1){
+        String s1 = bytesToString(b1);
+        int y = Integer.parseInt(s1);
+        return y;
+    }
 
     private void sendToActiveFragment(String uuid, int type, byte[] data) {
         Fragment fragment = mSectionsPagerAdapter.getItem(mViewPager.getCurrentItem());
@@ -317,20 +333,56 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
         if (OverviewFragment.class.isInstance(fragment)) {
             View v = fragment.getView();
 
+
+
+            ArrayAdapter<String> adapter=new ArrayAdapter<String>(
+                    this,
+                    android.R.layout.simple_dropdown_item_1line,
+                    sessionID);
+
+            ArrayAdapter<String> adapter1=new ArrayAdapter<String>(
+                    this,
+                    android.R.layout.simple_dropdown_item_1line,
+                    metrics);
+            /**
+             * view
+             */
+            ((Spinner) v.findViewById(R.id.spinner1)).setAdapter(adapter);
+            ((Spinner) v.findViewById(R.id.spinner2)).setAdapter(adapter1);
+
+
+
             if (uuid.equals(GattAttributes.UUID_CHARACTERISTIC_BATTERY_LEVEL)) {
                 ((TextView) v.findViewById(R.id.tvBatteryLevel)).setText(String.format("%d", data[0]));
             }
 
             if (uuid.equals(GattAttributes.SESSION_ID_CHARACTERISTIC)) {
              //   ((TextView) v.findViewById(R.id.tvTemperature)).setText(String.format("%d", data[0]));
-                Toast.makeText(MainActivity.this,"SESSION_ID_CHARACTERISTIC" + String.format("%d", data[0]), Toast.LENGTH_LONG ).show();
+              //  Toast.makeText(MainActivity.this,"SESSION_ID_CHARACTERISTIC" + String.format("%d", data[0]), Toast.LENGTH_SHORT ).show();
             }
             if (uuid.equals(GattAttributes.DATA_ID_CHARACTERISTIC)) {
                 //   ((TextView) v.findViewById(R.id.tvTemperature)).setText(String.format("%d", data[0]));
-                Toast.makeText(MainActivity.this,"DATA_ID_CHARACTERISTIC" + Arrays.toString(data), Toast.LENGTH_LONG ).show();
+                //Toast.makeText(MainActivity.this,"DATA_ID_CHARACTERISTIC" + Arrays.toString(data), Toast.LENGTH_SHORT ).show();
             }
+            if (uuid.equals(DATA_CHARACTERISTIC)) {
+                if(data.length!=0) {
+                    //   ((TextView) v.findViewById(R.id.tvTemperature)).setText(String.format("%d", data[0]));
+                    Log.i("DATA_CHAR_VALUE",""+ Arrays.toString(concat(data)));
+                    Toast.makeText(MainActivity.this,"DATA_CHARACTERISTIC"+ Arrays.toString(concat(data)), Toast.LENGTH_SHORT ).show();
+                    StringBuffer stringBuffer= new StringBuffer( Arrays.toString(concat(data)) );
+
+                }
+
+                else{
+                    Toast.makeText(MainActivity.this,"No value", Toast.LENGTH_SHORT ).show();
+
+                }
+
+            }
+
+
             if (uuid.equals(GattAttributes.MEMORY_CHARACTERISTIC)) {
-               ((TextView) v.findViewById(R.id.tvTemperature)).setText(String.format("%d", data[0]));
+               //((TextView) v.findViewById(R.id.tvTemperature)).setText(String.format("%d", data[0]));
             }
 
             if (uuid.equals(GattAttributes.SESSION_LIST_CHARACTERISTIC)) {
@@ -342,7 +394,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
 //                    for (int i = 0; i < data.length; intArray[i] = data[i++]) ;
 //////
 ////                       ((TextView) v.findViewById(R.id.tvError)).setText(String.format("%d", data[0]));
-//////              Toast.makeText(MainActivity.this,"List--" + String.format("%d", data[0]), Toast.LENGTH_LONG ).show();
+//////              Toast.makeText(MainActivity.this,"List--" + String.format("%d", data[0]), Toast.LENGTH_SHORT ).show();
 ////for(int i=0; i< 14*14; i++){
 //////
 ////  //Toast.makeText(mBluetoothLeService, ""+ String.format("%d", data[i]), Toast.LENGTH_SHORT).show();
@@ -369,8 +421,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                         82, 123, 24, 0, 0, 0, 0, 28, 0, 0, 9, 0, 0, 0, -61, 120, -61, 89, 24, 0, 0, 0, 0, 30, 0,
                         0, 10, 0, 0, 0, -24, 120, -61, 89, 24, 0, 0, 0, 0, 30, 0, 0, 11, 0, 0, 0, 48, 121, -61,
                         89, 24, 0, 0, 0, 0, 30, 0, 0, 12, 0, 0, 0};
-                if(list!=null) {
-                    byte[][] output = processList(list);
+                if(data.length!=0) {
+                    byte[][] output = processList(data);
                     for(byte[] line: output){
 //            Log.i("lne", String.valueOf(line));
                         for(int i: line){
@@ -384,53 +436,53 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
 
                 }
                 else{
-                    Toast.makeText(MainActivity.this,"No value", Toast.LENGTH_LONG ).show();
+                    Toast.makeText(MainActivity.this,"No value", Toast.LENGTH_SHORT ).show();
                 }
             }
             if (uuid.equals(GattAttributes.UUID_ERROR_CHARACTERISTIC)) {
                 ((TextView) v.findViewById(tvAccelerometerRange)).setText(String.format("%d", data[0]));
                 String value = String.format("%d", data[0]);
-                // Toast.makeText(MainActivity.this,"Value"+value, Toast.LENGTH_LONG ).show();
+                // Toast.makeText(MainActivity.this,"Value"+value, Toast.LENGTH_SHORT ).show();
                 if (value.equalsIgnoreCase("0")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.NO_ERROR, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.NO_ERROR, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("1")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.SESSION_IN_PROGRESS, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.SESSION_IN_PROGRESS, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("2"))
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_SESSION_IN_PROGRESS , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_SESSION_IN_PROGRESS , Toast.LENGTH_SHORT).show();
                   else if (value.equalsIgnoreCase("3")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.ID_NOT_FOUND, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.ID_NOT_FOUND, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("4")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.MEMORY_FULL, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.MEMORY_FULL, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("5"))
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.SLAVE_DEVICE_ERROR , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.SLAVE_DEVICE_ERROR , Toast.LENGTH_SHORT).show();
                   else if (value.equalsIgnoreCase("6")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.ERROR_IN_CONFIG, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.ERROR_IN_CONFIG, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("7")) {
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.DEVICE_NOT_FOUND, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.DEVICE_NOT_FOUND, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("8"))
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.MULTIPLE_DEVICES_FOUND , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.MULTIPLE_DEVICES_FOUND , Toast.LENGTH_SHORT).show();
                   else if (value.equalsIgnoreCase("9")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.UNUSED, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.UNUSED, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("10")) {
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.PAIRING_FAILED , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.PAIRING_FAILED , Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("11"))
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.VALUE_OUT_OF_RANGE , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.VALUE_OUT_OF_RANGE , Toast.LENGTH_SHORT).show();
                   else if (value.equalsIgnoreCase("12")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.UNKNOWN_COMMAND, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.UNKNOWN_COMMAND, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("13")) {
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.INVALID_COMMAND , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.INVALID_COMMAND , Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("14"))
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NXP_FIRMWARE_UPDATE_FAILED , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NXP_FIRMWARE_UPDATE_FAILED , Toast.LENGTH_SHORT).show();
                   else if (value.equalsIgnoreCase("15")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.CONFIG_FAILED, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.CONFIG_FAILED, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("16")) {
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_DATA , Toast.LENGTH_LONG).show();}
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_DATA , Toast.LENGTH_SHORT).show();}
                   else if (value.equalsIgnoreCase("17")) {
-                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.IPC_FAILED, Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, Puck_ErrorCodes.IPC_FAILED, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("18")) {
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_SLAVE_CONNECTED, Toast.LENGTH_LONG).show();}
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_SLAVE_CONNECTED, Toast.LENGTH_SHORT).show();}
                   else if (value.equalsIgnoreCase("19")) {
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_GPS_LOCK , Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_GPS_LOCK , Toast.LENGTH_SHORT).show();
 
                 }
             }
@@ -811,7 +863,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
         try {
             mBluetoothLeService.writeCharacteristic(characteristicCommand, startSession_bytes);
             Log.i("setStartSession","session has started");
-            Toast.makeText(MainActivity.this,"setStartSession " , Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,"setStartSession " , Toast.LENGTH_SHORT).show();
 
         } catch (Exception ignore) {
             ignore.printStackTrace();
@@ -825,11 +877,11 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
         try {
             mBluetoothLeService.writeCharacteristic(characteristicCommand, stopSession_bytes);
             Log.i("setStopSession","session has stopped");
-            Toast.makeText(MainActivity.this,"setStopSession " , Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,"setStopSession " , Toast.LENGTH_SHORT).show();
 
         } catch (Exception ignore) {
             ignore.printStackTrace();
-            Toast.makeText(MainActivity.this,"StopSession Error "+ ignore.getMessage() , Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,"StopSession Error "+ ignore.getMessage() , Toast.LENGTH_SHORT).show();
 
         }
     }
@@ -840,7 +892,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
         try {
             mBluetoothLeService.writeCharacteristic(characteristicCommand, listSession_bytes);
             Log.i("setListSession","session has listed");
-            Toast.makeText(MainActivity.this,"setListSession " , Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,"setListSession " , Toast.LENGTH_SHORT).show();
 
         } catch (Exception ignore) {
             ignore.printStackTrace();
@@ -853,24 +905,71 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
         try {
             mBluetoothLeService.writeCharacteristic(characteristicCommand, pauseSession_bytes);
             Log.i("setListSession","session has listed");
-            Toast.makeText(MainActivity.this,"setPauseSession " , Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this,"setPauseSession " , Toast.LENGTH_SHORT).show();
 
         } catch (Exception ignore) {
             ignore.printStackTrace();
         }
     }
 
-    @Override
-    public void setDetailsSession() {
-        byte[] detailsSession_bytes = {1};
-        byte[] metricType_bytes = {Puck_MetricTypeDefinations.AVERAGE_SPEED};
-        mBluetoothLeService.writeCharacteristic(characteristicSessionID, detailsSession_bytes);
-        Toast.makeText(MainActivity.this,"setDetailsSession " , Toast.LENGTH_LONG).show();
-        mBluetoothLeService.writeCharacteristic(characteristicDataID, metricType_bytes);
-        Toast.makeText(MainActivity.this,"metricType_bytes " , Toast.LENGTH_LONG).show();
 
+    /**
+     * Demo purpose Only
+     *
+     */
+
+    String[] sessionID={"1","2", "3","4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14"};
+    String[] metrics={"0", "1","2", "3", "4", "5","6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"
+            , "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"};
+
+
+    @Override
+    public void sendSession(int foo) {
+         sessionType =(byte)foo;
 
     }
 
+    @Override
+    public void sendMetric(int foo) {
+        metricType =(byte)foo;
 
+    }
+    @Override
+    public void setDetailsSession() {
+        byte[] detailsSession_bytes= {1,0};
+        byte[] metricType_bytes = {3};
+//for(int i=0; i<= metrics.length; i++) {
+//    byte metricType = (byte) i;
+//    metricType_bytes = new byte[]{metricType};
+
+   // Toast.makeText(MainActivity.this,"metricType_bytes "+metricType + metricType_bytes, Toast.LENGTH_SHORT).show();
+
+        mBluetoothLeService.writeCharacteristic(characteristicSessionID, detailsSession_bytes);
+        mBluetoothLeService.writeCharacteristic(characteristicDataID, metricType_bytes);
+
+
+    byte[] getSessionData = {Puck_CommandCharacteristics.GET_SESSION_DATA};
+
+    //   Toast.makeText(MainActivity.this,"metricType_bytes " , Toast.LENGTH_SHORT).show();
+        mBluetoothLeService.writeCharacteristic(characteristicCommand, getSessionData);
+        Log.i("characteristicCommand",""+  metricType_bytes+"---"+ sessionType);
+   // }
+    }
+
+    /**
+     * Appending Byte arrays for session Data
+     */
+
+    static public byte[] concat(byte[]... bufs) {
+        if (bufs.length == 0)
+            return null;
+        if (bufs.length == 1)
+            return bufs[0];
+        for (int i = 0; i < bufs.length - 1; i++) {
+            byte[] res = Arrays.copyOf(bufs[i], bufs[i].length+bufs[i + 1].length);
+            System.arraycopy(bufs[i + 1], 0, res, bufs[i].length, bufs[i + 1].length);
+            bufs[i + 1] = res;
+        }
+        return bufs[bufs.length - 1];
+    }
 }
