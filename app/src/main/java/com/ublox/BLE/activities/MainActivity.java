@@ -42,7 +42,10 @@ import com.ublox.BLE.fragments.OverviewFragment;
 import com.ublox.BLE.fragments.ServicesFragment;
 import com.ublox.BLE.fragments.SessionListAdapter;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +57,16 @@ import static com.ublox.BLE.R.id.tvAccelerometerRange;
 
 public class MainActivity extends Activity implements ActionBar.TabListener, OverviewFragment.IOverviewFragmentInteraction, ServicesFragment.IServiceFragmentInteraction, AdapterView.OnItemSelectedListener {
     private RecyclerView mRecyclerView;
+
+    /**
+     * Used for Session Data process
+     */
+    ByteArrayOutputStream outputStream;
+    byte[] dataComplete;
+    int wBufferLength,bPageCount,bCompression,boLast,tPageData, intCondition;
+    ArrayList<Integer> wOffset = new ArrayList<Integer>();
+    ArrayList<Integer> dwTimestamp = new ArrayList<Integer>();
+
 
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -84,7 +97,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
     private BluetoothGattCharacteristic characteristicFifo;
     byte sessionType;
     byte metricType;
-
+    byte[] destination;
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
 
@@ -344,6 +357,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                     this,
                     android.R.layout.simple_dropdown_item_1line,
                     metrics);
+
             /**
              * view
              */
@@ -365,18 +379,24 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                 //Toast.makeText(MainActivity.this,"DATA_ID_CHARACTERISTIC" + Arrays.toString(data), Toast.LENGTH_SHORT ).show();
             }
             if (uuid.equals(DATA_CHARACTERISTIC)) {
-                if(data.length!=0) {
-                    //   ((TextView) v.findViewById(R.id.tvTemperature)).setText(String.format("%d", data[0]));
-                    Log.i("DATA_CHAR_VALUE",""+ Arrays.toString(concat(data)));
-                    Toast.makeText(MainActivity.this,"DATA_CHARACTERISTIC"+ Arrays.toString(concat(data)), Toast.LENGTH_SHORT ).show();
-                    StringBuffer stringBuffer= new StringBuffer( Arrays.toString(concat(data)) );
 
+                dataRecieved(data);
+
+                if(data.length!=0) {
+                 //   dataRecieved(data);
+
+                    // dataRecieved(data);
+                  //  stringBuffer.append(Arrays.toString(concat(data)));
+                    dataRecieved(data);
+                    //   ((TextView) v.findViewById(R.id.tvTemperature)).setText(String.format("%d", data[0]));
+                 //   Log.i("DATA_CHAR_VALUE",""+ Arrays.toString(concat(data)));
                 }
 
                 else{
                     Toast.makeText(MainActivity.this,"No value", Toast.LENGTH_SHORT ).show();
 
                 }
+
 
             }
 
@@ -386,27 +406,6 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
             }
 
             if (uuid.equals(GattAttributes.SESSION_LIST_CHARACTERISTIC)) {
-
-//                if(data!=null) {
-//                    StringBuilder sb = new StringBuilder();
-//                    int[] intArray = new int[data.length];
-//// converting byteArray to intArray
-//                    for (int i = 0; i < data.length; intArray[i] = data[i++]) ;
-//////
-////                       ((TextView) v.findViewById(R.id.tvError)).setText(String.format("%d", data[0]));
-//////              Toast.makeText(MainActivity.this,"List--" + String.format("%d", data[0]), Toast.LENGTH_SHORT ).show();
-////for(int i=0; i< 14*14; i++){
-//////
-////  //Toast.makeText(mBluetoothLeService, ""+ String.format("%d", data[i]), Toast.LENGTH_SHORT).show();
-////    sb.append( String.format("%d", data[i])
-////    );
-//
-////}
-//
-//                    ((TextView) v.findViewById(R.id.tvError)).setText(Arrays.toString(intArray));
-//
-//                    Log.i("SESSION", Arrays.toString(intArray));
-//                }
 
 
                 /**
@@ -476,7 +475,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
                   else if (value.equalsIgnoreCase("15")) {
                     Toast.makeText(MainActivity.this, Puck_ErrorCodes.CONFIG_FAILED, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("16")) {
-                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_DATA , Toast.LENGTH_SHORT).show();}
+                    Toast.makeText(MainActivity.this,Puck_ErrorCodes.NO_DATA , Toast.LENGTH_SHORT).show();;}
                   else if (value.equalsIgnoreCase("17")) {
                     Toast.makeText(MainActivity.this, Puck_ErrorCodes.IPC_FAILED, Toast.LENGTH_SHORT).show();
                 } else if (value.equalsIgnoreCase("18")) {
@@ -559,6 +558,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
             Log.d(TAG, "Connect request result=" + result);
         }
         invalidateOptionsMenu();
+        stringBuffer= new StringBuffer( );
+
     }
 
     @Override
@@ -901,17 +902,24 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
 
     @Override
     public void setPauseSession() {
-        byte[] pauseSession_bytes = {Puck_CommandCharacteristics.PAUSE_SESSION};
-        try {
-            mBluetoothLeService.writeCharacteristic(characteristicCommand, pauseSession_bytes);
-            Log.i("setListSession","session has listed");
-            Toast.makeText(MainActivity.this,"setPauseSession " , Toast.LENGTH_SHORT).show();
+//        byte[] pauseSession_bytes = {Puck_CommandCharacteristics.PAUSE_SESSION};
+//        try {
+//            mBluetoothLeService.writeCharacteristic(characteristicCommand, pauseSession_bytes);
+//            Log.i("setListSession","session has listed");
+//            Toast.makeText(MainActivity.this,"setPauseSession " , Toast.LENGTH_SHORT).show();
+//
+//        } catch (Exception ignore) {
+//            ignore.printStackTrace();
+//        }
+        Toast.makeText(MainActivity.this, "DATA_CHARACTERISTIC" + Arrays.toString(String.valueOf(stringBuffer).getBytes()), Toast.LENGTH_SHORT).show();
+     //   StringBuilder stringBuilder = new StringBuilder(stringBuffer.length());
 
-        } catch (Exception ignore) {
-            ignore.printStackTrace();
-        }
+//        for(byte byteChar : String.valueOf(stringBuffer).getBytes())
+//            stringBuilder.append(String.format("%d ", byteChar));
+//       // stringBuilder.append(String.format("%02X ", byteChar));
+
+
     }
-
 
     /**
      * Demo purpose Only
@@ -937,7 +945,7 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
     @Override
     public void setDetailsSession() {
         byte[] detailsSession_bytes= {1,0};
-        byte[] metricType_bytes = {3};
+        byte[] metricType_bytes = {8};
 //for(int i=0; i<= metrics.length; i++) {
 //    byte metricType = (byte) i;
 //    metricType_bytes = new byte[]{metricType};
@@ -971,5 +979,98 @@ public class MainActivity extends Activity implements ActionBar.TabListener, Ove
             bufs[i + 1] = res;
         }
         return bufs[bufs.length - 1];
+    }
+
+
+
+    public void dataRecieved(byte[] data) {
+
+        /**
+         * Buffer length is bufferlength +  65 (header size)
+         */
+        intCondition= intCondition + data.length;
+
+        if (outputStream == null) {
+            if(data==null|| data.length==0){
+                Toast.makeText(MainActivity.this,"null" , Toast.LENGTH_SHORT ).show();
+
+                return;
+            }
+            outputStream = new ByteArrayOutputStream();
+        }
+
+        if (data != null && data.length != 0 ) {
+            try {
+
+                outputStream.write(data);
+
+                Toast.makeText(MainActivity.this,"outputStream" , Toast.LENGTH_SHORT ).show();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }  if(intCondition == wBufferLength +65){
+            dataComplete = outputStream.toByteArray();
+            Toast.makeText(MainActivity.this,"dataComplete"+ dataComplete , Toast.LENGTH_SHORT ).show();
+
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            wBufferLength = bytesToInt(Arrays.copyOfRange(dataComplete, 0, 2));
+            Log.i("ByteProcessing", "wBufferLength = " + wBufferLength + " (" + (wBufferLength + 65) + ")");
+            Toast.makeText(MainActivity.this,"wBufferLength = " + Arrays.toString(data), Toast.LENGTH_SHORT ).show();
+
+            bPageCount = bytesToInt(Arrays.copyOfRange(dataComplete, 2, 3));
+            Log.i("ByteProcessing", "bPageCount = " + bPageCount);
+
+
+            bCompression = bytesToInt(Arrays.copyOfRange(dataComplete, 3, 4));
+            Log.i("ByteProcessing", "bCompression = " + bCompression);
+
+            boLast = bytesToInt(Arrays.copyOfRange(dataComplete, 4, 5));
+            Log.i("ByteProcessing", "boLast = " + boLast);
+
+            for (int i = 0; i < 10; i++) {
+                wOffset.add(bytesToInt(Arrays.copyOfRange(dataComplete, 5 + (6 * i), 7 + (6 * i))));
+                Log.i("ByteProcessing", "wOffset[" + i + "] = " + wOffset.get(i));
+
+                dwTimestamp.add(bytesToInt(Arrays.copyOfRange(dataComplete, 7 + (6 * i), 5 + (6 * (i + 1)))));
+                Log.i("ByteProcessing", "dwTimestamp[" + i + "] = " + dwTimestamp.get(i));
+            }
+
+            int wOffsetCombined = 0;
+            int dwTimestampCombined = 0;
+            for (int i = 0; i < wOffset.size(); i++) {
+                wOffsetCombined = wOffsetCombined + wOffset.get(i);
+            }
+            for (int i = 0; i < dwTimestamp.size(); i++) {
+                dwTimestampCombined = dwTimestampCombined + dwTimestamp.get(i);
+            }
+            Log.i("ByteProcessing", "wOffset combined = " + wOffsetCombined);
+            Log.i("ByteProcessing", "dwTimestamp combined = " + dwTimestampCombined);
+
+            tPageData = ByteBuffer.wrap(dataComplete, 65, dataComplete.length - 65).getInt();
+            Log.i("ByteProcessing", "tPageData = " + tPageData);
+        }
+    }
+
+    public int bytesToInt(byte[] bytes){
+
+        int out = bytes[0] & 0xFF;
+        Log.i("ByteInterProcessing","stage 0 int " + out + " (" + Integer.toBinaryString(out) + ")");
+
+        for(int i=1;i < bytes.length;i++){
+            int interout = (bytes[i] & 0xFF) << (8 * i);
+            Log.i("ByteInterProcessing","stage " + i + " interout " + interout + " (" + Integer.toBinaryString(interout) + ")");
+            out = interout | out;
+            Log.i("ByteInterProcessing","stage " + i + " int " + out + " (" + Integer.toBinaryString(out) + ")");
+        }
+
+        Log.i("ByteInterProcessing","return int " + out + " (" + Integer.toBinaryString(out) + ")");
+        return out;
     }
 }
